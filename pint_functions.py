@@ -1,6 +1,8 @@
+import numpy as np
+from scipy.stats import norm
+
 from uncertainties import ufloat
 import uncertainties.unumpy as unp
-import numpy as np
 
 def to_quantity(measure, ureg):
     """Converts a measurement to a Quantity with a ufloat."""
@@ -9,7 +11,7 @@ def to_quantity(measure, ureg):
     return ureg.Quantity(ufloat(x.n, x.s), u)
 
 def to_quantity_array(arr):
-    """Converts an array of Measurements into a Quantity with a uarray."""
+    """Converts an array of Measurements into a Quantity with a uarray as its magnitude."""
     mag = np.array([x.magnitude for x in arr])
     units = [x.units for x in arr]
 
@@ -30,3 +32,12 @@ def split_measurement(arr, units=True):
     if units:
         return values(arr), errors(arr)
     return unp.nominal_values(arr), unp.std_devs(arr)
+
+def confidence_interval(arr, units=False, confidence=0.99, means=False):
+    """Returns the lower and upper bounds of a Quantity array within a given confidence interval."""
+    z = norm.ppf(1-(1-confidence)/2)
+    x, dx = split_measurement(arr, units)
+    output = [x - z*dx, x + z*dx]
+    if means:
+        output.append(x)
+    return output
