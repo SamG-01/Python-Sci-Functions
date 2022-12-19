@@ -5,13 +5,14 @@ from scipy.integrate import quad, nquad
 #from quadpy import quad
 from pandas import DataFrame
 
-def dist_ufloat(arr, poisson=False):
+def dist_ufloat(arr):
     """Converts an array_like arr of dimension 1 or 2 to its mean(s) and uncertainty(s)."""
     axis = np.ndim(arr) - 1
-    
-    mean = np.mean(arr, axis=axis)
-    std = mean**0.5 if poisson else np.std(arr, axis=axis)
-    result = unc.unumpy.uarray(mean, std)
+
+    result = unc.unumpy.uarray(
+        np.mean(arr, axis=axis),
+        np.std(arr, axis=axis)    
+    )
     
     if np.ndim(result) == 0:
         result = result.item()
