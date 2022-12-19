@@ -1,14 +1,18 @@
+"""
+Functions for the pint and uncertainties packages.
+"""
+
 import numpy as np
 from scipy.stats import norm
 
-from uncertainties import ufloat
+import uncertainties as unc
 import uncertainties.unumpy as unp
 
 def to_quantity(measure, ureg):
     """Converts a measurement to a Quantity with a ufloat."""
     u = measure.units
     x = measure.magnitude
-    return ureg.Quantity(ufloat(x.n, x.s), u)
+    return ureg.Quantity(unc.ufloat(x.n, x.s), u)
 
 def to_quantity_array(arr):
     """Converts an array of Measurements into a Quantity with a uarray as its magnitude."""
