@@ -5,22 +5,33 @@ from scipy.integrate import quad, nquad
 #from quadpy import quad
 from pandas import DataFrame
 
-def dist_ufloat(arr):
-    """Converts an array_like arr of dimension 1 or 2 to its mean(s) and uncertainty(s)."""
+def ufloat_from_dist(arr, correlated=False):
+    """Generates a ufloat (or uarray) from a distribution (or array of distributions)."""
     axis = np.ndim(arr) - 1
 
-    result = unc.unumpy.uarray(
-        np.mean(arr, axis=axis),
-        np.std(arr, axis=axis)    
-    )
-    
-    if np.ndim(result) == 0:
-        result = result.item()
-    return result
+    means = np.mean(arr, axis=axis)
 
-def normal_distribution(ufloat, n_samples=10000):
-    """Converts a ufloat to the equivalent normal distribution."""
-    return np.random.normal(ufloat.n, ufloat.s, n_samples)
+    if axis == 0:
+        return unc.unumpy.uarray(means, np.std(arr, axis=axis)) * 1
+
+    if correlated:
+        cov = np.cov(arr)
+        return np.array(unc.correlated_values(means, cov))
+    
+    return unc.unumpy.uarray(means, np.std(arr, axis=axis))
+
+def dist_from_ufloat(ufloats, n_samples=10000):
+    """Generates a normal distribution (or array of distributions) from a ufloat (or an array-like of ufloats)."""
+    # Handles the case of ufloats being a single ufloat, or an array-like with just one of them
+    if np.size(ufloats) == 1:
+        x = np.reshape(ufloats, 1).item()
+        return np.random.normal(x.n, x.s, n_samples)
+
+    # Otherwise, handles correlation between these
+    means = unc.unumpy.nominal_values(ufloats)
+    cov_matrix = unc.covariance_matrix(ufloats)
+    dists = np.random.multivariate_normal(means, cov_matrix, n_samples).T
+    return dists
 
 def quad_v(func, **kwargs):
     """
